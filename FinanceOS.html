@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#0A0F1E"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="description" content="FinanceOS — Personal Finance Manager"/>
+<title>FinanceOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --brand:#00E5CC;--brand2:#7B61FF;--red:#FF6B6B;--gold:#FFD166;--blue:#60A5FA;
+  --bg:#0A0F1E;--card:#111827;--card2:#1A2235;--border:rgba(255,255,255,0.07);
+  --t1:#F0F4FF;--t2:#8892A4;--t3:#4A5568;
+  --income:#00E5CC;--expense:#FF6B6B;--borrow:#FFD166;--lend:#7B61FF;--transfer:#60A5FA;
+  --nav:68px;--r:14px;--ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme=light]{
+  --bg:#F0F4FF;--card:#fff;--card2:#F8FAFF;--border:rgba(0,0,0,0.07);
+  --t1:#0A0F1E;--t2:#4A5568;--t3:#9AA5B4;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100dvh;overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* APP SHELL */
+#app{max-width:430px;margin:0 auto;min-height:100dvh;position:relative;background:var(--bg)}
+.screen{display:none;flex-direction:column;min-height:100dvh;padding-bottom:var(--nav)}
+.screen.active{display:flex;animation:fadeUp .3s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;transition:opacity .4s}
+.sp-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 8px 40px rgba(0,229,204,.35);animation:pop .6s var(--ease) .3s both}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.sp-name{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:fadeUp .5s var(--ease) .8s both}
+.sp-tag{font-size:13px;color:var(--t3);animation:fadeUp .5s var(--ease) 1s both}
+
+/* HEADER */
+.hdr{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border)}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--brand),var(--brand2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.hdr-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700}
+.hdr-btns{display:flex;gap:8px}
+.hbtn{width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.hbtn:active{transform:scale(.9)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:var(--nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 6px;z-index:100}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;color:var(--t3);transition:color .15s;cursor:pointer}
+.ni.active{color:var(--brand)}
+.ni .ico{font-size:20px;line-height:1}
+.ni .lbl{font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.ni.active .ico{filter:drop-shadow(0 0 5px var(--brand))}
+.nfab{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));display:flex;align-items:center;justify-content:center;font-size:22px;color:#0A0F1E;font-weight:700;box-shadow:0 4px 18px rgba(0,229,204,.4);transform:translateY(-6px);flex:none;transition:all .15s;cursor:pointer}
+.nfab:active{transform:translateY(-6px) scale(.9)}
+
+/* SCROLL BODY */
+.sb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px}
+
+/* HERO CARD */
+.hero{margin:14px 14px 0;border-radius:20px;padding:22px;background:linear-gradient(135deg,#0D1B3E 0%,#1A1040 50%,#0D3340 100%);border:1px solid rgba(255,255,255,.1);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-20%;width:180px;height:180px;background:radial-gradient(circle,rgba(0,229,204,.15),transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-30%;right:-10%;width:130px;height:130px;background:radial-gradient(circle,rgba(123,97,255,.2),transparent 70%);border-radius:50%}
+.hero-lbl{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand);opacity:.8}
+.hero-amt{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-1px;margin:5px 0 3px;color:var(--t1)}
+.hero-sub{font-size:12px;color:var(--t2)}
+.hero-stats{display:flex;gap:10px;margin-top:18px}
+.hstat{flex:1;background:rgba(255,255,255,.06);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,.06)}
+.hstat-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.hstat-v{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.hstat-v.inc{color:var(--income)}
+.hstat-v.exp{color:var(--expense)}
+
+/* QUICK ACTIONS */
+.qa-row{display:flex;gap:8px;padding:14px 14px 0;overflow-x:auto;scrollbar-width:none}
+.qa-row::-webkit-scrollbar{display:none}
+.qa-btn{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;min-width:60px;cursor:pointer}
+.qa-ico{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;transition:all .15s}
+.qa-ico:active{transform:scale(.88)}
+.qa-lbl{font-size:10px;font-weight:500;color:var(--t2);text-align:center}
+.qi-inc{background:rgba(0,229,204,.15)} .qi-exp{background:rgba(255,107,107,.15)}
+.qi-tr{background:rgba(96,165,250,.15)} .qi-bo{background:rgba(255,209,102,.15)} .qi-le{background:rgba(123,97,255,.15)}
+
+/* SECTION HEAD */
+.sh{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 8px}
+.sh-t{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.sh-a{font-size:12px;color:var(--brand);cursor:pointer}
+
+/* ACCOUNT SCROLL */
+.ac-scroll{display:flex;gap:10px;padding:0 14px 14px;overflow-x:auto;scrollbar-width:none}
+.ac-scroll::-webkit-scrollbar{display:none}
+.ac-card{min-width:190px;border-radius:var(--r);padding:15px;position:relative;overflow:hidden;flex-shrink:0;cursor:pointer;transition:all .15s}
+.ac-card:active{transform:scale(.97)}
+.ac-bank{background:linear-gradient(135deg,#1a2a4a,#243558);border:1px solid rgba(96,165,250,.2)}
+.ac-cash{background:linear-gradient(135deg,#1a3a2a,#1f4a2f);border:1px solid rgba(0,229,204,.2)}
+.ac-type{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:6px}
+.ac-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:10px}
+.ac-bal{font-family:'DM Mono',monospace;font-size:20px;font-weight:500}
+.ac-cur{font-size:11px;color:var(--t2);margin-top:2px}
+
+/* INSIGHT */
+.ins-card{margin:0 14px 8px;padding:12px 14px;background:var(--card2);border-radius:var(--r);border-left:3px solid var(--brand);display:flex;align-items:flex-start;gap:10px}
+.ins-ico{font-size:18px;flex-shrink:0}
+.ins-txt{font-size:12px;line-height:1.5;color:var(--t2)}
+.ins-txt strong{color:var(--t1)}
+
+/* BAR CHART */
+.chart-box{padding:14px;background:var(--card);border-radius:var(--r);margin:0 14px 10px;border:1px solid var(--border)}
+.chart-ttl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:14px}
+.barchart{display:flex;align-items:flex-end;gap:6px;height:90px}
+.bg{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.bw{flex:1;display:flex;align-items:flex-end;gap:2px;width:100%}
+.b{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:height .5s var(--ease)}
+.b-i{background:linear-gradient(180deg,var(--income),rgba(0,229,204,.3))}
+.b-e{background:linear-gradient(180deg,var(--expense),rgba(255,107,107,.3))}
+.bl{font-size:8px;color:var(--t3)}
+.chart-leg{display:flex;gap:14px;margin-top:8px}
+.cl{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3)}
+.cd{width:8px;height:8px;border-radius:2px}
+
+/* TX LIST */
+.tx-list{padding:0 14px;display:flex;flex-direction:column;gap:8px}
+.tx-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);position:relative;overflow:hidden;transition:transform .15s;cursor:pointer}
+.tx-item.sl{transform:translateX(-116px)}
+.tx-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.tx-det{flex:1;min-width:0}
+.tx-cat{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-note{font-size:11px;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-date{font-size:10px;color:var(--t3);margin-top:1px}
+.tx-r{text-align:right;flex-shrink:0}
+.tx-amt{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.tx-ac{font-size:10px;color:var(--t3);margin-top:2px}
+.ti-inc{background:rgba(0,229,204,.15)} .ta-inc{color:var(--income)}
+.ti-exp{background:rgba(255,107,107,.15)} .ta-exp{color:var(--expense)}
+.ti-bo{background:rgba(255,209,102,.15)} .ta-bo{color:var(--borrow)}
+.ti-le{background:rgba(123,97,255,.15)} .ta-le{color:var(--lend)}
+.ti-tr{background:rgba(96,165,250,.15)} .ta-tr{color:var(--transfer)}
+.tx-swa{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;transform:translateX(116px);transition:transform .15s}
+.tx-item.sl .tx-swa{transform:translateX(0)}
+.swb{height:100%;width:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;cursor:pointer}
+.swe{background:rgba(96,165,250,.15);color:var(--transfer)}
+.swd{background:rgba(255,107,107,.15);color:var(--expense);border-radius:0 var(--r) var(--r) 0}
+
+/* DATE CHIP */
+.dchip{text-align:center;font-size:10px;font-weight:600;color:var(--t3);padding:4px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+
+/* CARD VISUAL */
+.cc-vis{border-radius:16px;padding:18px;min-height:150px;position:relative;overflow:hidden;margin:0 14px 10px;background:linear-gradient(135deg,#1a1040,#0D1B3E,#1a2a4a);border:1px solid rgba(255,255,255,.1);cursor:pointer}
+.cc-vis::before{content:'';position:absolute;top:-30px;right:-30px;width:110px;height:110px;border:28px solid rgba(255,255,255,.04);border-radius:50%}
+.ccb{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:10px;font-weight:600;letter-spacing:1px}
+.ccl{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:3px}
+.ccn{font-family:'DM Mono',monospace;font-size:13px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-bottom:14px}
+.ccf{display:flex;justify-content:space-between;align-items:flex-end}
+.ccd{font-size:11px;color:rgba(255,255,255,.45)}
+.ccu{font-family:'DM Mono',monospace;font-size:14px;color:var(--expense)}
+.cc-prog{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:10px;overflow:hidden}
+.cc-pf{height:100%;background:linear-gradient(90deg,var(--income),var(--expense));border-radius:2px;transition:width .5s}
+
+/* LOAN */
+.lc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin:0 14px 8px;cursor:pointer}
+.lch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.lcn{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.lct{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:600}
+.lct.personal{background:rgba(255,209,102,.15);color:var(--borrow)}
+.lct.bank{background:rgba(96,165,250,.15);color:var(--transfer)}
+.lp{height:5px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden}
+.lpf{height:100%;background:linear-gradient(90deg,var(--brand2),var(--brand));border-radius:3px}
+.lam{display:flex;justify-content:space-between}
+.lag{display:flex;flex-direction:column;gap:2px}
+.lal{font-size:10px;color:var(--t3)}
+.lav{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+
+/* REMINDER */
+.rem-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px}
+.rem-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* SETTINGS */
+.sl-list{padding:0 14px}
+.sl-sec{margin-bottom:22px}
+.sl-sec-t{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:0 3px;margin-bottom:7px}
+.si{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:5px;cursor:pointer;transition:opacity .15s}
+.si:active{opacity:.7}
+.si-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.si-t{flex:1}
+.si-l{font-size:13px;font-weight:500}
+.si-d{font-size:11px;color:var(--t2);margin-top:1px}
+.si-ch{color:var(--t3);font-size:16px}
+.tog{width:42px;height:23px;background:var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .15s;flex-shrink:0}
+.tog.on{background:var(--brand)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;background:#fff;border-radius:50%;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on::after{transform:translateX(19px)}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mo.open{display:flex;animation:oin .3s var(--ease)}
+@keyframes oin{from{opacity:0}to{opacity:1}}
+.ms{width:100%;max-width:430px;background:var(--card);border-radius:20px 20px 0 0;padding:0 18px 36px;max-height:93dvh;overflow-y:auto;animation:sup .3s var(--ease)}
+@keyframes sup{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{width:38px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 18px}
+.mt{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;margin-bottom:18px}
+
+/* FULLSCREEN MODAL */
+.fm{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;flex-direction:column;max-width:430px;left:50%;transform:translateX(-50%)}
+.fm.open{display:flex;animation:fadeUp .3s var(--ease)}
+
+/* FORM */
+.fg{margin-bottom:14px}
+.fl{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);margin-bottom:7px;display:block}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:13px 14px;font-size:14px;color:var(--t1);transition:border-color .15s}
+.fi:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,229,204,.1)}
+.fi::placeholder{color:var(--t3)}
+select.fi{-webkit-appearance:none;cursor:pointer}
+.fr{display:flex;gap:10px}
+.fr .fg{flex:1}
+
+/* TYPE PILLS */
+.tp-row{display:flex;gap:6px;flex-wrap:wrap}
+.tp{padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--t2);cursor:pointer;transition:all .15s}
+.tp.a-inc{background:rgba(0,229,204,.15);border-color:var(--income);color:var(--income)}
+.tp.a-exp{background:rgba(255,107,107,.15);border-color:var(--expense);color:var(--expense)}
+.tp.a-bo{background:rgba(255,209,102,.15);border-color:var(--borrow);color:var(--borrow)}
+.tp.a-le{background:rgba(123,97,255,.15);border-color:var(--lend);color:var(--lend)}
+.tp.a-tr{background:rgba(96,165,250,.15);border-color:var(--transfer);color:var(--transfer)}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 20px;border-radius:9px;font-size:14px;font-weight:600;transition:all .15s;cursor:pointer;width:100%}
+.btn:active{transform:scale(.97)}
+.btn-p{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#0A0F1E}
+.btn-d{background:rgba(255,107,107,.15);color:var(--expense);border:1px solid rgba(255,107,107,.25)}
+.btn-g{background:var(--card2);color:var(--t2);border:1px solid var(--border)}
+.btn-sm{padding:9px 16px;font-size:12px;width:auto}
+.btn-row{display:flex;gap:8px;margin-top:8px}
+
+/* DONUT */
+.dw{position:relative;width:130px;height:130px;margin:0 auto 14px}
+.dw svg{transform:rotate(-90deg)}
+.dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dc-v{font-family:'Syne',sans-serif;font-size:17px;font-weight:800}
+.dc-l{font-size:10px;color:var(--t3)}
+.leg{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)}
+.ld{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--t3)}
+.empty-i{font-size:42px;margin-bottom:10px;opacity:.4}
+.empty-t{font-size:13px}
+
+/* TOAST */
+#tc{position:fixed;bottom:calc(var(--nav) + 14px);left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column-reverse;gap:7px;pointer-events:none;width:calc(100% - 28px);max-width:390px}
+.toast{padding:13px 16px;background:var(--card);border:1px solid var(--border);border-radius:9px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeUp .3s var(--ease) forwards;pointer-events:all}
+.toast.s{border-left:3px solid var(--income)}
+.toast.e{border-left:3px solid var(--expense)}
+.toast.i{border-left:3px solid var(--transfer)}
+.t-undo{margin-left:auto;font-size:11px;color:var(--brand);cursor:pointer;font-weight:700}
+
+/* UTILS */
+.mono{font-family:'DM Mono',monospace}
+.t-inc{color:var(--income)}.t-exp{color:var(--expense)}.t-mu{color:var(--t3)}
+.fb{display:flex;align-items:center;justify-content:space-between}
+.fc{display:flex;align-items:center;justify-content:center}
+.div{height:1px;background:var(--border);margin:14px 0}
+.cur-tag{font-size:10px;padding:2px 5px;background:var(--card2);border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;color:var(--t2)}
+.rem-badge{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);border-radius:10px;padding:10px 12px;margin:0 14px 8px;display:flex;align-items:center;gap:9px;font-size:12px;color:var(--t2)}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="sp-logo" id="sp-logo">💎</div>
+  <div class="sp-name" id="sp-name">FinanceOS</div>
+  <div class="sp-tag">Your money, your control</div>
+</div>
+<div id="app"></div>
+<div id="tc"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATABASE — IndexedDB
+// ═══════════════════════════════════════════════
+const DB_NAME='FinanceOS',DB_VER=1;
+let _db=null;
+
+function openDB(){
+  if(_db)return Promise.resolve(_db);
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,DB_VER);
+    r.onupgradeneeded=e=>{
+      const d=e.target.result;
+      ['settings','accounts','transactions','categories','creditCards','loans','reminders'].forEach(s=>{
+        if(!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:s==='settings'?'key':'id'});
+      });
+    };
+    r.onsuccess=e=>{_db=e.target.result;res(_db)};
+    r.onerror=()=>rej(r.error);
+  });
+}
+function dbAll(store){return openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+function dbGet(store,key){return openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction(store,'readonly').objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+function dbPut(store,item){return openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction(store,'readwrite').objectStore(store).put(item);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+function dbDel(store,key){return openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction(store,'readwrite').objectStore(store).delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)}))}
+
+async function getSetting(k){const r=await dbGet('settings',k);return r?r.value:null}
+async function setSetting(k,v){await dbPut('settings',{key:k,value:v})}
+
+const UID=()=>Date.now().toString(36)+Math.random().toString(36).substr(2,6);
+
+function fmtCur(amt,cur='AED'){return`${cur} ${Math.abs(amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`}
+function fmtDate(ds){
+  const d=new Date(ds),now=new Date(),diff=Math.floor((now-d)/86400000);
+  if(diff===0)return'Today';if(diff===1)return'Yesterday';
+  if(diff<7)return d.toLocaleDateString('en-US',{weekday:'short'});
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function monthRange(){
+  const n=new Date();
+  return{start:new Date(n.getFullYear(),n.getMonth(),1),end:new Date(n.getFullYear(),n.getMonth()+1,0)};
+}
+
+async function recalcBal(accountId){
+  const txs=await dbAll('transactions');
+  let bal=0;
+  for(const tx of txs){
+    if(tx.type==='income'&&tx.accountId===accountId)bal+=tx.amount;
+    else if(tx.type==='expense'&&tx.accountId===accountId)bal-=tx.amount;
+    else if(tx.type==='borrow'&&tx.accountId===accountId)bal+=tx.amount;
+    else if(tx.type==='lend'&&tx.accountId===accountId)bal-=tx.amount;
+    else if(tx.type==='transfer'){
+      if(tx.fromAccountId===accountId)bal-=tx.amount;
+      if(tx.toAccountId===accountId)bal+=(tx.toAmount||tx.amount);
+    }
+  }
+  // add opening balance
+  const acc=await dbGet('accounts',accountId);
+  if(acc?.openingBalance)bal+=acc.openingBalance;
+  return bal;
+}
+
+async function getAccountsWithBal(){
+  const accs=await dbAll('accounts');
+  return Promise.all(accs.map(async a=>{a.balance=await recalcBal(a.id);return a}));
+}
+
+async function exportData(){
+  const stores=['settings','accounts','transactions','categories','creditCards','loans','reminders'];
+  const out={exportedAt:new Date().toISOString(),version:1};
+  for(const s of stores)out[s]=await dbAll(s);
+  return JSON.stringify(out,null,2);
+}
+async function importData(json){
+  const data=JSON.parse(json);
+  const stores=['settings','accounts','transactions','categories','creditCards','loans','reminders'];
+  for(const s of stores)for(const item of(data[s]||[]))await dbPut(s,item);
+}
+
+const DEF_CATS=[
+  {id:'cat-food',name:'Food & Dining',icon:'🍽️',type:'expense',color:'#FF6B6B'},
+  {id:'cat-transport',name:'Transport',icon:'🚗',type:'expense',color:'#60A5FA'},
+  {id:'cat-rent',name:'Rent & Housing',icon:'🏠',type:'expense',color:'#A78BFA'},
+  {id:'cat-bills',name:'Bills & Utilities',icon:'⚡',type:'expense',color:'#FFD166'},
+  {id:'cat-shopping',name:'Shopping',icon:'🛍️',type:'expense',color:'#F472B6'},
+  {id:'cat-health',name:'Health',icon:'💊',type:'expense',color:'#34D399'},
+  {id:'cat-entertainment',name:'Entertainment',icon:'🎬',type:'expense',color:'#FB923C'},
+  {id:'cat-salary',name:'Salary',icon:'💼',type:'income',color:'#00E5CC'},
+  {id:'cat-freelance',name:'Freelance',icon:'💻',type:'income',color:'#7B61FF'},
+  {id:'cat-invest',name:'Investment',icon:'📈',type:'income',color:'#4ADE80'},
+  {id:'cat-other',name:'Other',icon:'📦',type:'both',color:'#94A3B8'},
+];
+const DEF_SETTINGS=[
+  {key:'appName',value:'FinanceOS'},{key:'theme',value:'dark'},{key:'currency',value:'AED'},
+  {key:'aedToPkr',value:75},{key:'logoEmoji',value:'💎'},{key:'lockPastTx',value:false},
+  {key:'editEnabled',value:true},{key:'deleteEnabled',value:true},
+];
+
+async function seedDefaults(){
+  const cats=await dbAll('categories');
+  if(!cats.length)for(const c of DEF_CATS)await dbPut('categories',c);
+  for(const s of DEF_SETTINGS){const ex=await getSetting(s.key);if(ex===null)await setSetting(s.key,s.value)}
+}
+
+async function genInsights(txs,settings){
+  const cur=settings.currency||'AED';
+  const now=new Date();
+  const thisM=txs.filter(t=>{const d=new Date(t.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+  const lastM=txs.filter(t=>{const d=new Date(t.date);const lm=new Date(now.getFullYear(),now.getMonth()-1,1);return d.getMonth()===lm.getMonth()&&d.getFullYear()===lm.getFullYear()});
+  const tmI=thisM.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const tmE=thisM.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const lmE=lastM.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const ins=[];
+  if(tmE>tmI&&tmI>0)ins.push({ico:'⚠️',txt:`<strong>Spending alert:</strong> Expenses exceed income by ${fmtCur(tmE-tmI,cur)} this month.`});
+  if(lmE>0&&tmE>lmE){const p=Math.round((tmE-lmE)/lmE*100);ins.push({ico:'📊',txt:`<strong>Trend:</strong> Expenses are up <strong>${p}%</strong> vs last month.`})}
+  const cm={};for(const t of thisM.filter(t=>t.type==='expense'))cm[t.category]=(cm[t.category]||0)+t.amount;
+  const top=Object.entries(cm).sort((a,b)=>b[1]-a[1])[0];
+  if(top&&tmE>0)ins.push({ico:'🔍',txt:`<strong>${top[0]}</strong> is your top expense at <strong>${Math.round(top[1]/tmE*100)}%</strong> of spending.`});
+  if(tmI>0){const r=Math.round((tmI-tmE)/tmI*100);ins.push({ico:r>20?'🌟':r<0?'💸':'💡',txt:r>20?`Great job! Saving <strong>${r}%</strong> of income.`:r<0?`Savings rate negative. Cut discretionary spending.`:`Savings rate <strong>${r}%</strong>. Aim for 20%+.`})}
+  if(!ins.length)ins.push({ico:'📝',txt:'Add transactions to get personalized <strong>AI insights</strong>.'});
+  return ins;
+}
+
+// ═══════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════
+const S={
+  screen:'dashboard',accounts:[],transactions:[],categories:[],
+  creditCards:[],loans:[],reminders:[],settings:{},
+  txType:'expense',editTx:null,editAcc:null,editCard:null,editLoan:null,
+};
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function toast(msg,type='s',undoCb=null){
+  const tc=document.getElementById('tc');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${type==='s'?'✓':type==='e'?'✕':'ℹ'}</span><span>${msg}</span>`;
+  if(undoCb){const u=document.createElement('span');u.className='t-undo';u.textContent='UNDO';u.onclick=()=>{undoCb();el.remove()};el.appendChild(u)}
+  tc.appendChild(el);
+  setTimeout(()=>el.remove(),undoCb?5000:2800);
+}
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+function nav(screen){
+  S.screen=screen;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('s-'+screen);
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('active',n.dataset.s===screen));
+  renderScreen(screen);
+}
+function renderScreen(sc){
+  if(sc==='dashboard')renderDash();
+  else if(sc==='transactions')renderTxScreen();
+  else if(sc==='accounts')renderAccScreen();
+  else if(sc==='cards')renderCardsScreen();
+  else if(sc==='more')renderMore();
+}
+
+// ═══════════════════════════════════════════════
+// LOAD
+// ═══════════════════════════════════════════════
+async function loadData(){
+  await seedDefaults();
+  const[accs,txs,cats,cards,loans,rems]=await Promise.all([
+    getAccountsWithBal(),dbAll('transactions'),dbAll('categories'),
+    dbAll('creditCards'),dbAll('loans'),dbAll('reminders')
+  ]);
+  txs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  S.accounts=accs;S.transactions=txs;S.categories=cats;
+  S.creditCards=cards;S.loans=loans;S.reminders=rems;
+  const keys=['appName','theme','currency','aedToPkr','logoEmoji','lockPastTx','editEnabled','deleteEnabled'];
+  S.settings={};
+  for(const k of keys)S.settings[k]=await getSetting(k);
+  applyTheme(S.settings.theme);
+  applyBranding();
+}
+async function reload(){
+  const[accs,txs,cards,loans,rems]=await Promise.all([
+    getAccountsWithBal(),dbAll('transactions'),dbAll('creditCards'),dbAll('loans'),dbAll('reminders')
+  ]);
+  txs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const cats=await dbAll('categories');
+  S.accounts=accs;S.transactions=txs;S.categories=cats;
+  S.creditCards=cards;S.loans=loans;S.reminders=rems;
+}
+
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t||'dark')}
+function applyBranding(){
+  const s=S.settings;
+  document.querySelectorAll('.hdr-name').forEach(e=>e.textContent=s.appName||'FinanceOS');
+  document.querySelectorAll('.hdr-mark').forEach(e=>e.textContent=s.logoEmoji||'💎');
+  document.getElementById('sp-logo').textContent=s.logoEmoji||'💎';
+  document.getElementById('sp-name').textContent=s.appName||'FinanceOS';
+  document.title=s.appName||'FinanceOS';
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+async function renderDash(){
+  const cur=S.settings.currency||'AED';
+  const totBal=S.accounts.reduce((a,ac)=>a+(ac.balance||0),0);
+  const{start,end}=monthRange();
+  const mTx=S.transactions.filter(t=>{const d=new Date(t.date);return d>=start&&d<=end});
+  const inc=mTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp=mTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const ins=await genInsights(S.transactions,S.settings);
+  const recent=S.transactions.slice(0,5);
+  const mn=new Date().toLocaleString('default',{month:'long',year:'numeric'});
+  const el=document.getElementById('s-dashboard');
+  el.innerHTML=`
+  <div class="hdr">
+    <div class="hdr-logo"><div class="hdr-mark">${S.settings.logoEmoji||'💎'}</div><span class="hdr-name">${S.settings.appName||'FinanceOS'}</span></div>
+    <div class="hdr-btns">
+      <button class="hbtn" onclick="openRem()">🔔</button>
+      <button class="hbtn" onclick="toggleTheme()">🌗</button>
+    </div>
+  </div>
+  <div class="sb">
+    <div class="hero">
+      <div class="hero-lbl">Total Net Worth</div>
+      <div class="hero-amt">${fmtCur(totBal,cur)}</div>
+      <div class="hero-sub">${mn}</div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-l">Income</div><div class="hstat-v inc">${fmtCur(inc,cur)}</div></div>
+        <div class="hstat"><div class="hstat-l">Expenses</div><div class="hstat-v exp">${fmtCur(exp,cur)}</div></div>
+        <div class="hstat"><div class="hstat-l">Saved</div><div class="hstat-v ${inc-exp>=0?'inc':'exp'}">${fmtCur(inc-exp,cur)}</div></div>
+      </div>
+    </div>
+    <div class="qa-row">
+      <button class="qa-btn" onclick="openTx('income')"><div class="qa-ico qi-inc">💰</div><span class="qa-lbl">Income</span></button>
+      <button class="qa-btn" onclick="openTx('expense')"><div class="qa-ico qi-exp">💸</div><span class="qa-lbl">Expense</span></button>
+      <button class="qa-btn" onclick="openTx('transfer')"><div class="qa-ico qi-tr">↔️</div><span class="qa-lbl">Transfer</span></button>
+      <button class="qa-btn" onclick="openTx('borrow')"><div class="qa-ico qi-bo">🤝</div><span class="qa-lbl">Borrow</span></button>
+      <button class="qa-btn" onclick="openTx('lend')"><div class="qa-ico qi-le">🫱</div><span class="qa-lbl">Lend</span></button>
+    </div>
+    <div class="sh"><span class="sh-t">🤖 AI Insights</span></div>
+    ${ins.map(i=>`<div class="ins-card"><span class="ins-ico">${i.ico}</span><span class="ins-txt">${i.txt}</span></div>`).join('')}
+    <div class="sh"><span class="sh-t">My Accounts</span><span class="sh-a" onclick="nav('accounts')">See all →</span></div>
+    ${S.accounts.length===0?`<div style="padding:0 14px"><div class="chart-box"><div class="empty"><div class="empty-i">🏦</div><div class="empty-t">No accounts yet</div></div></div></div>`
+    :`<div class="ac-scroll">${S.accounts.map(renderAcCard).join('')}</div>`}
+    ${renderBarChart()}
+    <div class="sh"><span class="sh-t">Recent Activity</span><span class="sh-a" onclick="nav('transactions')">See all →</span></div>
+    ${recent.length===0?`<div class="tx-list"><div class="chart-box"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">No transactions yet</div></div></div></div>`
+    :`<div class="tx-list">${recent.map(renderTxItem).join('')}</div>`}
+  </div>`;
+  setupSwipe();
+}
+
+function renderBarChart(){
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const lbl=d.toLocaleString('default',{month:'short'});
+    const inc=S.transactions.filter(t=>{const td=new Date(t.date);return t.type==='income'&&td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear()}).reduce((a,t)=>a+t.amount,0);
+    const exp=S.transactions.filter(t=>{const td=new Date(t.date);return t.type==='expense'&&td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear()}).reduce((a,t)=>a+t.amount,0);
+    months.push({lbl,inc,exp});
+  }
+  const maxV=Math.max(...months.map(m=>Math.max(m.inc,m.exp)),1);
+  return`<div class="chart-box">
+    <div class="chart-ttl">6-Month Overview</div>
+    <div class="barchart">${months.map(m=>`<div class="bg"><div class="bw"><div class="b b-i" style="height:${Math.max(3,m.inc/maxV*85)}px"></div><div class="b b-e" style="height:${Math.max(3,m.exp/maxV*85)}px"></div></div><span class="bl">${m.lbl}</span></div>`).join('')}</div>
+    <div class="chart-leg"><div class="cl"><div class="cd" style="background:var(--income)"></div>Income</div><div class="cl"><div class="cd" style="background:var(--expense)"></div>Expense</div></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// TRANSACTIONS SCREEN
+// ═══════════════════════════════════════════════
+function renderTxScreen(){
+  const el=document.getElementById('s-transactions');
+  const grps=groupByDate(S.transactions);
+  el.innerHTML=`
+  <div class="hdr"><span class="hdr-title">Transactions</span><button class="hbtn" onclick="openTx('expense')">➕</button></div>
+  <div style="padding:10px 14px">
+    <div class="tp-row">
+      <button class="tp a-exp" onclick="filterTx('all',this)">All</button>
+      <button class="tp" onclick="filterTx('income',this)">Income</button>
+      <button class="tp" onclick="filterTx('expense',this)">Expense</button>
+      <button class="tp" onclick="filterTx('transfer',this)">Transfer</button>
+      <button class="tp" onclick="filterTx('borrow',this)">Borrow</button>
+      <button class="tp" onclick="filterTx('lend',this)">Lend</button>
+    </div>
+  </div>
+  <div class="sb" id="tx-sb">
+    ${S.transactions.length===0?`<div class="tx-list"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">No transactions yet.<br>Tap + to add one!</div></div></div>`
+    :Object.entries(grps).map(([d,ts])=>`<div class="dchip">${d}</div><div class="tx-list">${ts.map(renderTxItem).join('')}</div>`).join('')}
+  </div>`;
+  setupSwipe();
+}
+
+function groupByDate(txs){
+  const g={};
+  for(const t of txs){const k=fmtDate(t.date);if(!g[k])g[k]=[];g[k].push(t)}
+  return g;
+}
+
+function filterTx(type,btn){
+  document.querySelectorAll('#s-transactions .tp').forEach(p=>p.className='tp');
+  btn.className=type==='all'?'tp a-exp':`tp a-${type==='income'?'inc':type==='expense'?'exp':type==='borrow'?'bo':type==='lend'?'le':'tr'}`;
+  const sb=document.getElementById('tx-sb');if(!sb)return;
+  const filtered=type==='all'?S.transactions:S.transactions.filter(t=>t.type===type);
+  const grps=groupByDate(filtered);
+  sb.innerHTML=Object.entries(grps).map(([d,ts])=>`<div class="dchip">${d}</div><div class="tx-list">${ts.map(renderTxItem).join('')}</div>`).join('')||`<div class="empty"><div class="empty-i">🔍</div><div class="empty-t">No ${type} transactions</div></div>`;
+  setupSwipe();
+}
+
+function txTypeCls(type){
+  return{income:'inc',expense:'exp',borrow:'bo',lend:'le',transfer:'tr'}[type]||'exp';
+}
+function txSign(type){return['income','borrow'].includes(type)?'+':type==='transfer'?'⇄':'-'}
+function txIcon(type){return{income:'💰',expense:'💸',borrow:'🤝',lend:'🫱',transfer:'↔️'}[type]||'📋'}
+
+function renderTxItem(tx){
+  const acc=S.accounts.find(a=>a.id===(tx.accountId||tx.fromAccountId));
+  const cat=S.categories.find(c=>c.name===tx.category);
+  const ico=cat?.icon||txIcon(tx.type);
+  const tc=txTypeCls(tx.type);
+  const sign=txSign(tx.type);
+  const cur=tx.currency||S.settings.currency||'AED';
+  let sub=acc?.name||'';
+  if(tx.type==='transfer'){const to=S.accounts.find(a=>a.id===tx.toAccountId);if(to)sub+=` → ${to.name}`}
+  return`<div class="tx-item" data-id="${tx.id}" onclick="handleTxTap(event,'${tx.id}')">
+    <div class="tx-ico ti-${tc}">${ico}</div>
+    <div class="tx-det">
+      <div class="tx-cat">${tx.category||tx.type}</div>
+      <div class="tx-note">${tx.notes||sub}</div>
+      <div class="tx-date">${fmtDate(tx.date)}</div>
+    </div>
+    <div class="tx-r">
+      <div class="tx-amt ta-${tc}">${sign!=='⇄'?sign:''}${fmtCur(tx.amount,cur)}</div>
+      <div class="tx-ac">${acc?.name||''}</div>
+    </div>
+    <div class="tx-swa">
+      <div class="swb swe" onclick="event.stopPropagation();editTx('${tx.id}')">✏️<br>Edit</div>
+      <div class="swb swd" onclick="event.stopPropagation();delTx('${tx.id}')">🗑️<br>Del</div>
+    </div>
+  </div>`;
+}
+
+function setupSwipe(){
+  document.querySelectorAll('.tx-item').forEach(item=>{
+    let sx=0,sy=0,drag=false;
+    item.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;drag=false},{passive:true});
+    item.addEventListener('touchmove',e=>{
+      const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+      if(Math.abs(dy)>Math.abs(dx))return;
+      drag=true;
+      if(dx<-30)item.classList.add('sl');
+      else if(dx>10)item.classList.remove('sl');
+    },{passive:true});
+    item.addEventListener('touchend',()=>{if(!drag)item.classList.remove('sl')});
+  });
+}
+
+function handleTxTap(e,id){
+  const item=document.querySelector(`[data-id="${id}"]`);
+  if(item?.classList.contains('sl')){item.classList.remove('sl');return}
+}
+
+// ═══════════════════════════════════════════════
+// ACCOUNTS SCREEN
+// ═══════════════════════════════════════════════
+function renderAccScreen(){
+  const el=document.getElementById('s-accounts');
+  el.innerHTML=`
+  <div class="hdr"><span class="hdr-title">Accounts</span><button class="hbtn" onclick="openAddAcc()">➕</button></div>
+  <div class="sb">
+    ${S.accounts.length===0?`<div style="padding:14px"><div class="chart-box"><div class="empty"><div class="empty-i">🏦</div><div class="empty-t">No accounts yet</div></div></div></div>`
+    :S.accounts.map(a=>{
+      const cur=a.currency||S.settings.currency||'AED';
+      const ico=a.type==='bank'?'🏦':'💵';
+      const txc=S.transactions.filter(t=>t.accountId===a.id||t.fromAccountId===a.id||t.toAccountId===a.id).length;
+      return`<div class="chart-box" style="margin:8px 14px;cursor:pointer" onclick="openEditAcc('${a.id}')">
+        <div class="fb">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;background:var(--card2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px">${ico}</div>
+            <div><div style="font-weight:600;font-size:14px">${a.name}</div><div style="font-size:11px;color:var(--t3)">${a.type} · ${txc} txns</div></div>
+          </div>
+          <div style="text-align:right">
+            <div class="mono" style="font-size:16px;color:${(a.balance||0)>=0?'var(--income)':'var(--expense)'}">${fmtCur(a.balance||0,cur)}</div>
+            <span class="cur-tag">${cur}</span>
+          </div>
+        </div>
+      </div>`}).join('')}
+    <div style="padding:8px 14px"><button class="btn btn-g" onclick="openAddAcc()">➕ Add Account</button></div>
+  </div>`;
+}
+
+function renderAcCard(a){
+  const cur=a.currency||S.settings.currency||'AED';
+  const ico=a.type==='bank'?'🏦':'💵';
+  const cls=a.type==='bank'?'ac-bank':'ac-cash';
+  return`<div class="ac-card ${cls}" onclick="openEditAcc('${a.id}')">
+    <div class="ac-type">${ico} ${(a.type||'account').toUpperCase()}</div>
+    <div class="ac-name">${a.name}</div>
+    <div class="ac-bal">${fmtCur(a.balance||0,cur)}</div>
+    <div class="ac-cur">${cur}</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// CARDS SCREEN
+// ═══════════════════════════════════════════════
+function renderCardsScreen(){
+  const el=document.getElementById('s-cards');
+  const due=S.creditCards.filter(c=>{if(!c.dueDate)return false;const d=(new Date(c.dueDate)-new Date())/86400000;return d>=0&&d<=7});
+  el.innerHTML=`
+  <div class="hdr"><span class="hdr-title">Cards & Loans</span><button class="hbtn" onclick="openAddCard()">➕</button></div>
+  <div class="sb">
+    ${due.length?`<div class="rem-badge"><span>🔔</span><span><strong>${due.length}</strong> payment${due.length>1?'s':''} due soon!</span></div>`:''}
+    <div class="sh"><span class="sh-t">💳 Credit Cards</span><button class="btn btn-sm btn-g" onclick="openAddCard()">+ Add</button></div>
+    ${S.creditCards.length===0?`<div style="padding:0 14px 14px"><div class="chart-box"><div class="empty"><div class="empty-i">💳</div><div class="empty-t">No credit cards</div></div></div></div>`
+    :S.creditCards.map(renderCardVis).join('')}
+    <div class="sh"><span class="sh-t">🏦 Loans & Debts</span><button class="btn btn-sm btn-g" onclick="openAddLoan()">+ Add</button></div>
+    ${S.loans.length===0?`<div style="padding:0 14px 14px"><div class="chart-box"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">No loans tracked</div></div></div></div>`
+    :S.loans.map(renderLoanCard).join('')}
+  </div>`;
+}
+
+function renderCardVis(c){
+  const pct=c.limit>0?Math.min(100,(c.outstanding||0)/c.limit*100):0;
+  const due=c.dueDate?new Date(c.dueDate):null;
+  const dl=due?Math.ceil((due-new Date())/86400000):null;
+  const cur=c.currency||'AED';
+  return`<div class="cc-vis" onclick="openEditCard('${c.id}')">
+    <div class="ccb">${c.bank||'CREDIT CARD'}</div>
+    <div class="ccl">${c.name}</div>
+    <div class="ccn">•••• •••• •••• ${c.lastFour||'0000'}</div>
+    <div class="ccf">
+      <div>
+        <div class="ccd">Limit: ${fmtCur(c.limit||0,cur)}</div>
+        ${due?`<div class="ccd" style="${dl<=3?'color:var(--expense)':''}">Due: ${due.toLocaleDateString('en-US',{month:'short',day:'numeric'})} ${dl!==null?`(${dl}d)`:''}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div class="ccu">Used: ${fmtCur(c.outstanding||0,cur)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4)">Min: ${fmtCur(c.minPayment||0,cur)}</div>
+      </div>
+    </div>
+    <div class="cc-prog"><div class="cc-pf" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function renderLoanCard(l){
+  const rem=(l.total||0)-(l.paid||0);
+  const pct=l.total>0?Math.min(100,(l.paid||0)/l.total*100):0;
+  const cur=l.currency||S.settings.currency||'AED';
+  return`<div class="lc" onclick="openEditLoan('${l.id}')">
+    <div class="lch"><div class="lcn">${l.name}</div><span class="lct ${l.loanType||'personal'}">${l.loanType||'personal'}</span></div>
+    <div class="lp"><div class="lpf" style="width:${pct}%"></div></div>
+    <div class="lam">
+      <div class="lag"><span class="lal">Total</span><span class="lav">${fmtCur(l.total||0,cur)}</span></div>
+      <div class="lag" style="text-align:center"><span class="lal">Paid</span><span class="lav t-inc">${fmtCur(l.paid||0,cur)}</span></div>
+      <div class="lag" style="text-align:right"><span class="lal">Remaining</span><span class="lav t-exp">${fmtCur(rem,cur)}</span></div>
+    </div>
+    ${l.dueDate?`<div style="margin-top:8px;font-size:11px;color:var(--t3)">📅 Next: ${new Date(l.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>`:''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// MORE SCREEN
+// ═══════════════════════════════════════════════
+function renderMore(){
+  const el=document.getElementById('s-more');
+  const s=S.settings;
+  el.innerHTML=`
+  <div class="hdr"><span class="hdr-title">More</span></div>
+  <div class="sb">
+    <div class="sl-list">
+      <div class="sl-sec">
+        <div class="sl-sec-t">Analytics</div>
+        <div class="si" onclick="openReports()"><div class="si-ico" style="background:rgba(123,97,255,.15)">📊</div><div class="si-t"><div class="si-l">Reports & Analytics</div><div class="si-d">Monthly breakdowns & charts</div></div><span class="si-ch">›</span></div>
+        <div class="si" onclick="openRem()"><div class="si-ico" style="background:rgba(255,107,107,.15)">🔔</div><div class="si-t"><div class="si-l">Reminders</div><div class="si-d">${S.reminders.length} active</div></div><span class="si-ch">›</span></div>
+      </div>
+      <div class="sl-sec">
+        <div class="sl-sec-t">Manage</div>
+        <div class="si" onclick="openCats()"><div class="si-ico" style="background:rgba(255,209,102,.15)">🏷️</div><div class="si-t"><div class="si-l">Categories</div><div class="si-d">${S.categories.length} categories</div></div><span class="si-ch">›</span></div>
+        <div class="si" onclick="nav('accounts')"><div class="si-ico" style="background:rgba(96,165,250,.15)">🏦</div><div class="si-t"><div class="si-l">Accounts</div><div class="si-d">${S.accounts.length} accounts</div></div><span class="si-ch">›</span></div>
+      </div>
+      <div class="sl-sec">
+        <div class="sl-sec-t">Settings</div>
+        <div class="si" onclick="openBranding()"><div class="si-ico" style="background:rgba(0,229,204,.15)">🎨</div><div class="si-t"><div class="si-l">App Branding</div><div class="si-d">Name, logo, theme</div></div><span class="si-ch">›</span></div>
+        <div class="si" onclick="openCurrency()"><div class="si-ico" style="background:rgba(255,209,102,.15)">💱</div><div class="si-t"><div class="si-l">Currency</div><div class="si-d">AED / PKR · Rate: 1 AED = ${s.aedToPkr||75} PKR</div></div><span class="si-ch">›</span></div>
+        <div class="si"><div class="si-ico" style="background:rgba(123,97,255,.15)">🌗</div><div class="si-t"><div class="si-l">Dark Mode</div></div><div class="tog ${s.theme!=='light'?'on':''}" onclick="toggleTheme()"></div></div>
+        <div class="si"><div class="si-ico" style="background:rgba(255,107,107,.15)">🔒</div><div class="si-t"><div class="si-l">Lock Past Transactions</div><div class="si-d">Prevent editing old entries</div></div><div class="tog ${s.lockPastTx?'on':''}" id="tog-lock" onclick="toggleLock(this)"></div></div>
+      </div>
+      <div class="sl-sec">
+        <div class="sl-sec-t">Data</div>
+        <div class="si" onclick="doExport()"><div class="si-ico" style="background:rgba(0,229,204,.15)">⬆️</div><div class="si-t"><div class="si-l">Export Backup</div><div class="si-d">Save as JSON</div></div><span class="si-ch">›</span></div>
+        <div class="si" onclick="doImport()"><div class="si-ico" style="background:rgba(96,165,250,.15)">⬇️</div><div class="si-t"><div class="si-l">Import Backup</div><div class="si-d">Restore from JSON</div></div><span class="si-ch">›</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════
+function openM(id){const m=document.getElementById(id);if(m){m.classList.add('open')}}
+function closeM(id){const m=document.getElementById(id);if(m)m.classList.remove('open')}
+function closeAllM(){document.querySelectorAll('.mo,.fm').forEach(m=>m.classList.remove('open'))}
+
+// ── ADD TRANSACTION ──
+function openTx(type='expense',existing=null){
+  S.editTx=existing;S.txType=existing?.type||type;
+  const tx=existing||{};
+  const cur=S.settings.currency||'AED';
+  const accs=S.accounts;const cats=S.categories;
+  document.getElementById('mo-tx').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">${existing?'Edit':'Add'} Transaction</div>
+    <div class="fg"><label class="fl">Type</label>
+      <div class="tp-row" id="tp-pills">
+        ${['income','expense','borrow','lend','transfer'].map(t=>`<button class="tp ${t===S.txType?'a-'+(t==='income'?'inc':t==='expense'?'exp':t==='borrow'?'bo':t==='lend'?'le':'tr'):''}" onclick="selTxType('${t}',this)">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Amount</label><input class="fi" type="number" id="tx-amt" placeholder="0.00" step="0.01" value="${tx.amount||''}"/></div>
+    <div class="fr">
+      <div class="fg" id="fg-from"><label class="fl" id="acc-lbl">${S.txType==='transfer'?'From Account':'Account'}</label>
+        <select class="fi" id="tx-acc">
+          <option value="">Select account</option>
+          ${accs.map(a=>`<option value="${a.id}" ${(tx.accountId===a.id||tx.fromAccountId===a.id)?'selected':''}>${a.name} (${a.currency||cur})</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg" id="fg-to" style="${S.txType!=='transfer'?'display:none':''}"><label class="fl">To Account</label>
+        <select class="fi" id="tx-to">
+          <option value="">Select</option>
+          ${accs.map(a=>`<option value="${a.id}" ${tx.toAccountId===a.id?'selected':''}>${a.name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="fg" id="fg-rate" style="${S.txType!=='transfer'?'display:none':''}"><label class="fl">Exchange Rate (cross-currency)</label><input class="fi" type="number" id="tx-rate" placeholder="1.00" step="0.0001" value="${tx.rate||''}"/></div>
+    <div class="fg"><label class="fl">Category</label>
+      <select class="fi" id="tx-cat">
+        <option value="">Select category</option>
+        ${cats.map(c=>`<option value="${c.name}" ${tx.category===c.name?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="tx-date" value="${tx.date||new Date().toISOString().split('T')[0]}"/></div>
+      <div class="fg"><label class="fl">Currency</label>
+        <select class="fi" id="tx-cur">
+          <option value="AED" ${(tx.currency||cur)==='AED'?'selected':''}>AED</option>
+          <option value="PKR" ${(tx.currency||cur)==='PKR'?'selected':''}>PKR</option>
+          <option value="USD" ${(tx.currency||cur)==='USD'?'selected':''}>USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" type="text" id="tx-notes" placeholder="Optional..." value="${tx.notes||''}"/></div>
+    <div class="btn-row">
+      ${existing?`<button class="btn btn-d" onclick="delTx('${existing.id}')">🗑️</button>`:''}
+      <button class="btn btn-g" onclick="closeM('mo-tx')">Cancel</button>
+      <button class="btn btn-p" onclick="saveTx()">💾 Save</button>
+    </div>
+  </div>`;
+  openM('mo-tx');
+}
+
+function selTxType(type,btn){
+  S.txType=type;
+  const map={income:'inc',expense:'exp',borrow:'bo',lend:'le',transfer:'tr'};
+  document.querySelectorAll('#tp-pills .tp').forEach(p=>p.className='tp');
+  btn.className=`tp a-${map[type]}`;
+  const ft=document.getElementById('fg-to'),fr=document.getElementById('fg-rate');
+  const al=document.getElementById('acc-lbl');
+  if(ft)ft.style.display=type==='transfer'?'':'none';
+  if(fr)fr.style.display=type==='transfer'?'':'none';
+  if(al)al.textContent=type==='transfer'?'From Account':'Account';
+}
+
+async function saveTx(){
+  const amt=parseFloat(document.getElementById('tx-amt')?.value);
+  const accId=document.getElementById('tx-acc')?.value;
+  const toId=document.getElementById('tx-to')?.value;
+  const cat=document.getElementById('tx-cat')?.value||S.txType;
+  const date=document.getElementById('tx-date')?.value;
+  const cur=document.getElementById('tx-cur')?.value||S.settings.currency;
+  const notes=document.getElementById('tx-notes')?.value||'';
+  const rate=parseFloat(document.getElementById('tx-rate')?.value)||1;
+  if(!amt||amt<=0){toast('Enter a valid amount','e');return}
+  if(!date){toast('Select a date','e');return}
+  let tx={id:S.editTx?.id||UID(),type:S.txType,amount:amt,currency:cur,category:cat,date,notes};
+  if(S.txType==='transfer'){
+    if(!accId||!toId){toast('Select both accounts','e');return}
+    tx.fromAccountId=accId;tx.toAccountId=toId;tx.rate=rate;tx.toAmount=amt*rate;
+  } else {
+    if(!accId){toast('Select an account','e');return}
+    tx.accountId=accId;
+  }
+  await dbPut('transactions',tx);
+  await reload();closeM('mo-tx');
+  toast(S.editTx?'Transaction updated!':'Transaction saved!');
+  S.editTx=null;renderScreen(S.screen);
+}
+
+function editTx(id){const tx=S.transactions.find(t=>t.id===id);if(tx){closeAllM();openTx(tx.type,tx)}}
+
+async function delTx(id){
+  const tx=S.transactions.find(t=>t.id===id);if(!tx)return;
+  closeAllM();
+  S.transactions=S.transactions.filter(t=>t.id!==id);
+  renderScreen(S.screen);
+  let deleted=true;
+  toast('Transaction deleted','i',()=>{deleted=false;S.transactions.unshift(tx);S.transactions.sort((a,b)=>new Date(b.date)-new Date(a.date));reload().then(()=>renderScreen(S.screen))});
+  setTimeout(async()=>{if(deleted){await dbDel('transactions',id);await reload()}},5500);
+}
+
+// ── ADD ACCOUNT ──
+function openAddAcc(){openEditAcc(null)}
+function openEditAcc(id){
+  S.editAcc=id?S.accounts.find(a=>a.id===id):null;
+  const a=S.editAcc||{};
+  document.getElementById('mo-acc').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">${a.id?'Edit':'Add'} Account</div>
+    <div class="fg"><label class="fl">Account Name</label><input class="fi" type="text" id="acc-name" placeholder="e.g. ENBD Savings" value="${a.name||''}"/></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Type</label>
+        <select class="fi" id="acc-type">
+          <option value="bank" ${a.type==='bank'?'selected':''}>🏦 Bank</option>
+          <option value="cash" ${a.type==='cash'?'selected':''}>💵 Cash</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Currency</label>
+        <select class="fi" id="acc-cur">
+          <option value="AED" ${(a.currency||'AED')==='AED'?'selected':''}>AED</option>
+          <option value="PKR" ${a.currency==='PKR'?'selected':''}>PKR</option>
+          <option value="USD" ${a.currency==='USD'?'selected':''}>USD</option>
+        </select>
+      </div>
+    </div>
+    ${!a.id?`<div class="fg"><label class="fl">Opening Balance</label><input class="fi" type="number" id="acc-ob" placeholder="0.00" value="0"/></div>`:''}
+    <div class="btn-row">
+      ${a.id?`<button class="btn btn-d" onclick="delAcc('${a.id}')">🗑️</button>`:''}
+      <button class="btn btn-g" onclick="closeM('mo-acc')">Cancel</button>
+      <button class="btn btn-p" onclick="saveAcc()">💾 Save</button>
+    </div>
+  </div>`;
+  openM('mo-acc');
+}
+
+async function saveAcc(){
+  const name=document.getElementById('acc-name')?.value?.trim();
+  if(!name){toast('Account name required','e');return}
+  const type=document.getElementById('acc-type')?.value;
+  const cur=document.getElementById('acc-cur')?.value;
+  const ob=parseFloat(document.getElementById('acc-ob')?.value)||0;
+  const acc={id:S.editAcc?.id||UID(),name,type,currency:cur,openingBalance:ob};
+  await dbPut('accounts',acc);
+  if(!S.editAcc&&ob>0){
+    await dbPut('transactions',{id:UID(),type:'income',amount:ob,accountId:acc.id,category:'Opening Balance',date:new Date().toISOString().split('T')[0],currency:cur,notes:'Opening balance'});
+  }
+  await reload();closeM('mo-acc');
+  toast(S.editAcc?'Account updated!':'Account created!');
+  S.editAcc=null;renderScreen(S.screen);
+}
+
+async function delAcc(id){
+  if(!confirm('Delete this account?'))return;
+  await dbDel('accounts',id);
+  await reload();closeM('mo-acc');
+  toast('Account deleted','i');renderScreen(S.screen);
+}
+
+// ── CREDIT CARD ──
+function openAddCard(){openEditCard(null)}
+function openEditCard(id){
+  S.editCard=id?S.creditCards.find(c=>c.id===id):null;
+  const c=S.editCard||{};const cur=S.settings.currency||'AED';
+  document.getElementById('mo-card').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">${c.id?'Edit':'Add'} Credit Card</div>
+    <div class="fg"><label class="fl">Card Name</label><input class="fi" type="text" id="cc-name" placeholder="e.g. Emirates NBD Visa" value="${c.name||''}"/></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Bank</label><input class="fi" type="text" id="cc-bank" value="${c.bank||''}"/></div>
+      <div class="fg"><label class="fl">Last 4 Digits</label><input class="fi" type="text" id="cc-l4" maxlength="4" value="${c.lastFour||''}"/></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Limit</label><input class="fi" type="number" id="cc-lim" value="${c.limit||''}"/></div>
+      <div class="fg"><label class="fl">Outstanding</label><input class="fi" type="number" id="cc-out" value="${c.outstanding||''}"/></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Min Payment</label><input class="fi" type="number" id="cc-min" value="${c.minPayment||''}"/></div>
+      <div class="fg"><label class="fl">Due Date</label><input class="fi" type="date" id="cc-due" value="${c.dueDate||''}"/></div>
+    </div>
+    <div class="fg"><label class="fl">Currency</label>
+      <select class="fi" id="cc-cur">
+        <option value="AED" ${(c.currency||cur)==='AED'?'selected':''}>AED</option>
+        <option value="PKR" ${(c.currency||cur)==='PKR'?'selected':''}>PKR</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      ${c.id?`<button class="btn btn-d" onclick="delCard('${c.id}')">🗑️</button>`:''}
+      <button class="btn btn-g" onclick="closeM('mo-card')">Cancel</button>
+      <button class="btn btn-p" onclick="saveCard()">💾 Save</button>
+    </div>
+  </div>`;
+  openM('mo-card');
+}
+
+async function saveCard(){
+  const name=document.getElementById('cc-name')?.value?.trim();
+  if(!name){toast('Card name required','e');return}
+  const card={id:S.editCard?.id||UID(),name,bank:document.getElementById('cc-bank')?.value,lastFour:document.getElementById('cc-l4')?.value,limit:parseFloat(document.getElementById('cc-lim')?.value)||0,outstanding:parseFloat(document.getElementById('cc-out')?.value)||0,minPayment:parseFloat(document.getElementById('cc-min')?.value)||0,dueDate:document.getElementById('cc-due')?.value,currency:document.getElementById('cc-cur')?.value};
+  await dbPut('creditCards',card);await reload();closeM('mo-card');
+  toast(S.editCard?'Card updated!':'Card added!');S.editCard=null;renderScreen('cards');
+}
+async function delCard(id){if(!confirm('Delete card?'))return;await dbDel('creditCards',id);await reload();closeM('mo-card');toast('Card deleted','i');renderScreen('cards')}
+
+// ── LOAN ──
+function openAddLoan(){openEditLoan(null)}
+function openEditLoan(id){
+  S.editLoan=id?S.loans.find(l=>l.id===id):null;
+  const l=S.editLoan||{};const cur=S.settings.currency||'AED';
+  document.getElementById('mo-loan').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">${l.id?'Edit':'Add'} Loan</div>
+    <div class="fg"><label class="fl">Loan Name</label><input class="fi" type="text" id="ln-name" placeholder="e.g. Car Loan" value="${l.name||''}"/></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Type</label>
+        <select class="fi" id="ln-type">
+          <option value="personal" ${l.loanType==='personal'?'selected':''}>Personal</option>
+          <option value="bank" ${l.loanType==='bank'?'selected':''}>Bank</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Currency</label>
+        <select class="fi" id="ln-cur">
+          <option value="AED" ${(l.currency||cur)==='AED'?'selected':''}>AED</option>
+          <option value="PKR" ${(l.currency||cur)==='PKR'?'selected':''}>PKR</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Total Amount</label><input class="fi" type="number" id="ln-total" value="${l.total||''}"/></div>
+      <div class="fg"><label class="fl">Amount Paid</label><input class="fi" type="number" id="ln-paid" value="${l.paid||''}"/></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Next Payment Due</label><input class="fi" type="date" id="ln-due" value="${l.dueDate||''}"/></div>
+    </div>
+    <div class="fg"><label class="fl">Notes</label><input class="fi" type="text" id="ln-notes" value="${l.notes||''}"/></div>
+    <div class="btn-row">
+      ${l.id?`<button class="btn btn-d" onclick="delLoan('${l.id}')">🗑️</button>`:''}
+      <button class="btn btn-g" onclick="closeM('mo-loan')">Cancel</button>
+      <button class="btn btn-p" onclick="saveLoan()">💾 Save</button>
+    </div>
+  </div>`;
+  openM('mo-loan');
+}
+
+async function saveLoan(){
+  const name=document.getElementById('ln-name')?.value?.trim();
+  if(!name){toast('Loan name required','e');return}
+  const loan={id:S.editLoan?.id||UID(),name,loanType:document.getElementById('ln-type')?.value,currency:document.getElementById('ln-cur')?.value,total:parseFloat(document.getElementById('ln-total')?.value)||0,paid:parseFloat(document.getElementById('ln-paid')?.value)||0,dueDate:document.getElementById('ln-due')?.value,notes:document.getElementById('ln-notes')?.value};
+  await dbPut('loans',loan);await reload();closeM('mo-loan');
+  toast(S.editLoan?'Loan updated!':'Loan added!');S.editLoan=null;renderScreen('cards');
+}
+async function delLoan(id){if(!confirm('Delete loan?'))return;await dbDel('loans',id);await reload();closeM('mo-loan');toast('Loan deleted','i');renderScreen('cards')}
+
+// ── REMINDERS ──
+async function openRem(){
+  document.getElementById('mo-rem').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">Reminders</div>
+    <button class="btn btn-p" style="margin-bottom:14px" onclick="showRemForm()">➕ Add Reminder</button>
+    <div id="rem-list">
+      ${S.reminders.length===0?`<div class="empty"><div class="empty-i">🔔</div><div class="empty-t">No reminders set</div></div>`
+      :S.reminders.map(r=>`<div class="rem-item"><div class="rem-dot" style="background:${r.color||'#00E5CC'}"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${r.icon||'🔔'} ${r.label}</div><div style="font-size:11px;color:var(--t3)">${r.frequency||'Once'} ${r.date?'· '+new Date(r.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}</div></div><button onclick="delRem('${r.id}')" style="color:var(--expense);font-size:15px">🗑️</button></div>`).join('')}
+    </div>
+    <div id="rem-form" style="display:none">
+      <div class="div"></div>
+      <div class="fg"><label class="fl">Type</label>
+        <select class="fi" id="rem-type">
+          <option value="credit-due" data-icon="💳" data-color="#FF6B6B">💳 Credit Card Due</option>
+          <option value="loan" data-icon="🏦" data-color="#7B61FF">🏦 Loan Payment</option>
+          <option value="salary" data-icon="💼" data-color="#00E5CC">💼 Salary</option>
+          <option value="remittance" data-icon="🏠" data-color="#FFD166">🏠 Send Money Home</option>
+          <option value="bills" data-icon="⚡" data-color="#60A5FA">⚡ Bills</option>
+          <option value="custom" data-icon="🔔" data-color="#94A3B8">✏️ Custom</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Label</label><input class="fi" type="text" id="rem-lbl" placeholder="Reminder label..."/></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="rem-date" value="${new Date().toISOString().split('T')[0]}"/></div>
+        <div class="fg"><label class="fl">Frequency</label>
+          <select class="fi" id="rem-freq">
+            <option value="once">One-time</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-g" onclick="document.getElementById('rem-form').style.display='none'">Cancel</button>
+        <button class="btn btn-p" onclick="saveRem()">Save</button>
+      </div>
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-g" onclick="closeM('mo-rem')">Close</button></div>
+  </div>`;
+  openM('mo-rem');
+}
+function showRemForm(){document.getElementById('rem-form').style.display=''}
+async function saveRem(){
+  const typeEl=document.getElementById('rem-type');
+  const opt=typeEl?.options[typeEl.selectedIndex];
+  const label=document.getElementById('rem-lbl')?.value?.trim()||opt?.text||'Reminder';
+  const r={id:UID(),type:typeEl?.value,label,date:document.getElementById('rem-date')?.value,frequency:document.getElementById('rem-freq')?.value,icon:opt?.dataset?.icon||'🔔',color:opt?.dataset?.color||'#00E5CC'};
+  await dbPut('reminders',r);S.reminders.push(r);
+  scheduleNotif(r);closeM('mo-rem');await openRem();toast('Reminder set!');
+}
+async function delRem(id){await dbDel('reminders',id);S.reminders=S.reminders.filter(r=>r.id!==id);closeM('mo-rem');await openRem();toast('Reminder removed','i')}
+function scheduleNotif(r){
+  if(!('Notification'in window))return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'&&r.date){const t=new Date(r.date).getTime()-Date.now();if(t>0)setTimeout(()=>new Notification(r.label,{body:`Reminder: ${r.label}`}),t)}
+  });
+}
+
+// ── CATEGORIES ──
+async function openCats(){
+  document.getElementById('mo-cats').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">Categories</div>
+    <div class="fr" style="margin-bottom:14px">
+      <div class="fg"><input class="fi" type="text" id="nc-name" placeholder="Category name..."/></div>
+      <div class="fg" style="max-width:70px"><input class="fi" type="text" id="nc-icon" placeholder="🏷️" maxlength="2"/></div>
+      <button class="btn btn-p btn-sm" style="width:auto;margin-top:24px" onclick="addCat()">Add</button>
+    </div>
+    <div>
+      ${S.categories.map(c=>`<div class="fb" style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:18px">${c.icon||'📦'}</span>
+          <div><div style="font-weight:500;font-size:13px">${c.name}</div><div style="font-size:10px;color:var(--t3)">${c.type}</div></div>
+        </div>
+        <button onclick="delCat('${c.id}')" style="color:var(--expense);font-size:14px">🗑️</button>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:14px"><button class="btn btn-g" onclick="closeM('mo-cats')">Close</button></div>
+  </div>`;
+  openM('mo-cats');
+}
+async function addCat(){
+  const name=document.getElementById('nc-name')?.value?.trim();
+  const icon=document.getElementById('nc-icon')?.value?.trim()||'📦';
+  if(!name){toast('Enter name','e');return}
+  const cat={id:UID(),name,icon,type:'both',color:'#94A3B8'};
+  await dbPut('categories',cat);S.categories.push(cat);closeM('mo-cats');await openCats();toast('Category added!');
+}
+async function delCat(id){await dbDel('categories',id);S.categories=S.categories.filter(c=>c.id!==id);closeM('mo-cats');await openCats()}
+
+// ── BRANDING ──
+function openBranding(){
+  const s=S.settings;
+  document.getElementById('mo-brand').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">App Branding</div>
+    <div class="fg"><label class="fl">App Name</label><input class="fi" type="text" id="br-name" value="${s.appName||'FinanceOS'}"/></div>
+    <div class="fg"><label class="fl">Logo Emoji</label><input class="fi" type="text" id="br-logo" value="${s.logoEmoji||'💎'}" maxlength="2"/></div>
+    <div class="fg"><label class="fl">Theme</label>
+      <select class="fi" id="br-theme">
+        <option value="dark" ${s.theme!=='light'?'selected':''}>🌙 Dark</option>
+        <option value="light" ${s.theme==='light'?'selected':''}>☀️ Light</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="closeM('mo-brand')">Cancel</button>
+      <button class="btn btn-p" onclick="saveBranding()">Save</button>
+    </div>
+  </div>`;
+  openM('mo-brand');
+}
+async function saveBranding(){
+  const name=document.getElementById('br-name')?.value?.trim()||'FinanceOS';
+  const logo=document.getElementById('br-logo')?.value?.trim()||'💎';
+  const theme=document.getElementById('br-theme')?.value||'dark';
+  await setSetting('appName',name);await setSetting('logoEmoji',logo);await setSetting('theme',theme);
+  S.settings.appName=name;S.settings.logoEmoji=logo;S.settings.theme=theme;
+  applyTheme(theme);applyBranding();closeM('mo-brand');toast('Branding updated!');renderScreen(S.screen);
+}
+
+// ── CURRENCY ──
+function openCurrency(){
+  const s=S.settings;
+  document.getElementById('mo-cur').innerHTML=`<div class="ms">
+    <div class="mh"></div>
+    <div class="mt">Currency Settings</div>
+    <div class="fg"><label class="fl">Primary Currency</label>
+      <select class="fi" id="pc-cur">
+        <option value="AED" ${s.currency==='AED'?'selected':''}>🇦🇪 AED — UAE Dirham</option>
+        <option value="PKR" ${s.currency==='PKR'?'selected':''}>🇵🇰 PKR — Pakistani Rupee</option>
+        <option value="USD" ${s.currency==='USD'?'selected':''}>🇺🇸 USD — US Dollar</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">AED → PKR Rate</label><input class="fi" type="number" id="pc-rate" value="${s.aedToPkr||75}" step="0.01"/>
+      <div style="font-size:11px;color:var(--t3);margin-top:5px">Manual rate — update as needed</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="closeM('mo-cur')">Cancel</button>
+      <button class="btn btn-p" onclick="saveCurrency()">Save</button>
+    </div>
+  </div>`;
+  openM('mo-cur');
+}
+async function saveCurrency(){
+  const cur=document.getElementById('pc-cur')?.value;
+  const rate=parseFloat(document.getElementById('pc-rate')?.value)||75;
+  await setSetting('currency',cur);await setSetting('aedToPkr',rate);
+  S.settings.currency=cur;S.settings.aedToPkr=rate;
+  closeM('mo-cur');toast('Currency saved!');renderScreen(S.screen);
+}
+
+// ── REPORTS ──
+function openReports(){
+  const cur=S.settings.currency||'AED';
+  const{start,end}=monthRange();
+  const mTx=S.transactions.filter(t=>{const d=new Date(t.date);return d>=start&&d<=end});
+  const expenses=mTx.filter(t=>t.type==='expense');
+  const cm={};for(const t of expenses)cm[t.category]=(cm[t.category]||0)+t.amount;
+  const entries=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((a,[,v])=>a+v,0);
+  const cols=['#FF6B6B','#7B61FF','#00E5CC','#FFD166','#60A5FA','#F472B6','#34D399','#FB923C','#38BDF8','#A78BFA'];
+  const r=56,cx=65,cy=65;let off=0;const circ=2*Math.PI*r;
+  const segs=entries.slice(0,8).map(([,v],i)=>{const pct=v/total,dash=pct*circ;const s=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${cols[i%cols.length]}" stroke-width="14" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-off}"/>`;off+=dash;return s}).join('');
+  const inc=mTx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const exp=mTx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const fm=document.getElementById('mo-reports');
+  fm.innerHTML=`
+  <div class="hdr"><span class="hdr-title">Reports</span><button class="hbtn" onclick="document.getElementById('mo-reports').classList.remove('open')">✕</button></div>
+  <div class="sb" style="padding:14px">
+    <div class="chart-box" style="margin:0 0 14px">
+      <div class="chart-ttl">This Month</div>
+      ${[{l:'Income',v:inc,c:'var(--income)'},{l:'Expenses',v:exp,c:'var(--expense)'},{l:'Net',v:inc-exp,c:inc-exp>=0?'var(--income)':'var(--expense)'}].map(row=>`<div class="fb" style="margin-bottom:10px"><span style="color:var(--t2);font-size:13px">${row.l}</span><span class="mono" style="color:${row.c};font-size:14px">${fmtCur(row.v,cur)}</span></div>`).join('')}
+    </div>
+    ${total>0?`
+    <div class="chart-box" style="margin:0 0 14px">
+      <div class="chart-ttl">Expense Breakdown</div>
+      <div class="dw"><svg width="130" height="130" viewBox="0 0 130 130">${segs}</svg><div class="dc"><div class="dc-v">${fmtCur(total,cur)}</div><div class="dc-l">Total</div></div></div>
+      <div class="leg">${entries.slice(0,8).map(([n,v],i)=>`<div class="li"><div class="ld" style="background:${cols[i%cols.length]}"></div>${n} (${Math.round(v/total*100)}%)</div>`).join('')}</div>
+    </div>
+    <div class="chart-box" style="margin:0 0 14px">
+      <div class="chart-ttl">By Category</div>
+      ${entries.map(([n,v],i)=>`<div style="margin-bottom:10px"><div class="fb" style="margin-bottom:3px"><span style="font-size:12px">${n}</span><span class="mono" style="font-size:12px">${fmtCur(v,cur)}</span></div><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${Math.round(v/total*100)}%;background:${cols[i%cols.length]};border-radius:2px"></div></div></div>`).join('')}
+    </div>`:
+    `<div class="empty"><div class="empty-i">📊</div><div class="empty-t">No expense data this month</div></div>`}
+    <div class="chart-box">
+      <div class="chart-ttl">Account Balances</div>
+      ${S.accounts.map(a=>`<div class="fb" style="padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${a.name}</span><span class="mono" style="font-size:13px;color:${(a.balance||0)>=0?'var(--income)':'var(--expense)'}">${fmtCur(a.balance||0,a.currency||cur)}</span></div>`).join('')||`<div class="empty-t t-mu" style="padding:14px 0">No accounts</div>`}
+    </div>
+  </div>`;
+  fm.classList.add('open');
+}
+
+// ── MISC ──
+function toggleTheme(){
+  const next=S.settings.theme==='light'?'dark':'light';
+  S.settings.theme=next;applyTheme(next);setSetting('theme',next);renderScreen(S.screen);
+}
+async function toggleLock(el){
+  const v=!S.settings.lockPastTx;S.settings.lockPastTx=v;el.classList.toggle('on',v);await setSetting('lockPastTx',v);
+}
+async function doExport(){
+  const data=await exportData();
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`financeos-backup-${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(url);
+  toast('Backup exported!');
+}
+function doImport(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{await importData(await file.text());await reload();renderScreen(S.screen);toast('Backup restored!')}
+    catch{toast('Invalid backup file','e')}
+  };inp.click();
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+async function init(){
+  await loadData();
+
+  document.getElementById('app').innerHTML=`
+    <div id="s-dashboard" class="screen active"></div>
+    <div id="s-transactions" class="screen"></div>
+    <div id="s-accounts" class="screen"></div>
+    <div id="s-cards" class="screen"></div>
+    <div id="s-more" class="screen"></div>
+
+    <nav class="bnav">
+      <div class="ni active" data-s="dashboard" onclick="nav('dashboard')"><span class="ico">🏠</span><span class="lbl">Home</span></div>
+      <div class="ni" data-s="transactions" onclick="nav('transactions')"><span class="ico">📋</span><span class="lbl">Txns</span></div>
+      <div class="nfab" onclick="openTx('expense')">＋</div>
+      <div class="ni" data-s="cards" onclick="nav('cards')"><span class="ico">💳</span><span class="lbl">Cards</span></div>
+      <div class="ni" data-s="more" onclick="nav('more')"><span class="ico">⋯</span><span class="lbl">More</span></div>
+    </nav>
+
+    <!-- Bottom Sheet Modals -->
+    <div id="mo-tx" class="mo" onclick="if(event.target===this)closeM('mo-tx')"></div>
+    <div id="mo-acc" class="mo" onclick="if(event.target===this)closeM('mo-acc')"></div>
+    <div id="mo-card" class="mo" onclick="if(event.target===this)closeM('mo-card')"></div>
+    <div id="mo-loan" class="mo" onclick="if(event.target===this)closeM('mo-loan')"></div>
+    <div id="mo-rem" class="mo" onclick="if(event.target===this)closeM('mo-rem')"></div>
+    <div id="mo-cats" class="mo" onclick="if(event.target===this)closeM('mo-cats')"></div>
+    <div id="mo-brand" class="mo" onclick="if(event.target===this)closeM('mo-brand')"></div>
+    <div id="mo-cur" class="mo" onclick="if(event.target===this)closeM('mo-cur')"></div>
+
+    <!-- Fullscreen -->
+    <div id="mo-reports" class="fm"></div>
+  `;
+
+  // Hide splash
+  setTimeout(()=>{
+    const sp=document.getElementById('splash');
+    if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400)}
+  },1600);
+
+  await renderDash();
+
+  // Due date alerts
+  S.creditCards.forEach(c=>{
+    if(!c.dueDate)return;
+    const dl=Math.ceil((new Date(c.dueDate)-new Date())/86400000);
+    if(dl>=0&&dl<=3)setTimeout(()=>toast(`🔔 ${c.name} due in ${dl} day${dl!==1?'s':''}!`,'i'),2000);
+  });
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
